@@ -1,20 +1,241 @@
 # thooks
 react数据管理hooks
 
-> ss
+> 在我们写的web页面，基本由列表、详情页、表单、弹窗组成，尤其是管理后台上最为贴切。
+> 
+> 将这几种场景进行数据抽离，封装成公共库可以很好的提升开发效率。
 
 ## 使用
 
-### useList
+### 列表
+涉及到列表时可以使用`useList`，我们来看个示例
+
+```typescript jsx
+import {useList} from "thooks";
+import {useEffect} from "react";
+
+const ArticlesList = () => {
+  const list = useList({
+    onGetListData():Promise<{
+      items: I[];
+      totalItems: number;
+    }> {
+      return request.get('/api/articles')
+    }
+  });
+
+  useEffect(() => {
+    list.getListData();
+  },[])
+  
+  if(list.loading){
+      return <div>loading</div>
+  }
+
+  return list.items.map(item=>{
+    return <div>{item.title}</div>
+  })
+}
+```
+
+如果是有分页也非常方便，只需调用`setCurrentPage`，会自动调用`onGetListData`并传入分页参数请求数据，返回的数据加上统计信息 <br />
+
+* 如果自己的接口分页数据并不是`currentPage、totalItems`这种格式，建议在`request`层做统一处理，或者再基于`useList`进行封装
+* 默认当第二页及以上时会清空之前的数据，如果是移动端下拉追加数据的场景，可以调用`setConfig({listDataAppend:true})`进行设置
+
+```typescript jsx
+import {useList} from "thooks";
+import {useEffect} from "react";
+
+const ArticlesList = () => {
+  const list = useList({
+    //query为分页信息
+    onGetListData(query: {
+      currentPage: number;
+      pageSize: number;
+    }): Promise<{
+      items: I[];
+      totalItems: number;
+    }> {
+      return request.get('/api/articles', query)
+    }
+  });
+
+  useEffect(()=>{
+    const main = async ()=>{
+      await list.setCurrentPage(1)
+      
+      console.log(list.pagination.totalPage)
+    }
+    
+    main()
+  },[])
+  //...
+}
+```
 
 ### useDetail
+涉及到详情时可以使用`useDetail`
+
+```typescript jsx
+import {useDetail} from "thooks";
+import {useEffect} from "react";
+
+const ArticleDetail = () => {
+  const detail = useDetail({
+    onGetDetailData() {
+      return request.get('/api/article', {
+        id: router.params.id
+      })
+    }
+  });
+
+  useEffect(() => {
+    detail.getDetailData();
+  }, [])
+
+  if (detail.loading) {
+    return <div>loading</div>
+  }
+
+  return <div>{detail.item.title || ''}</div>
+}
+```
 
 ### useForm
+涉及到表单时可以使用`useForm`
+
+```typescript jsx
+import {useDetail} from "thooks";
+import {useEffect} from "react";
+
+const ArticleForm = () => {
+  const form = useForm({
+    fields:{
+      title:""
+    },
+    onSubmit(){
+      if(!form.fields.title){
+        return alert('请输入标题')
+      }  
+      return request.post('/api/article',{
+        ...form.fields
+      })
+    }
+  });
+
+  return <div>
+    <Input value={form.fields.title} onChange={e=>{
+      form.setFields({
+        title:e.title.submit()
+      })
+    }}></Input>
+    <Button loading={form.loading} onClick={()=>{
+      form.submit();
+    }
+    }>提交</Button>
+  </div>
+}
+```
+
+如果是有筛选和列表组合到场景，也可以使用
+```typescript jsx
+import {useList} from "thooks";
+import {useEffect} from "react";
+
+const ArticlesList = () => {
+  const form = useForm({
+    fields: {
+      title: ""
+    }
+  });
+  const list = useList({
+    onGetListData(query) {
+      return request.get('/api/articles',query)
+    }
+  });
+  
+  
+  useEffect(()=>{
+    list.setCurrentPage(1)
+  },[form.fields]);
+  
+  //return ...
+}
+```
 
 ### useModal
+涉及到表单时可以使用`useModal`
+
+* 显示弹窗时传到数据都可以放到第一个参数里，然后可以在`modal.payload`中拿到
+* 很多时候是在父组件里调用展示弹窗，这时子组件可以使用`useImperativeHandle`把对应展示弹窗的方法透出去
+
+```typescript jsx
+import {useList} from "thooks";
+import {useEffect} from "react";
+
+const ArticleModal = () => {
+  const modal = useModal()
+    
+  return <div>
+    <div onClick={()=>{
+      modal.showModal({
+        title:"标题"
+      })
+    }
+    }>显示</div>
+    <Modal
+      title={modal.payload.title || ''}
+      visible={modal.visible}
+      onClose={modal.hideModal}
+    ></Modal>
+  </div>
+}
+```
 
 ### createStore
+在跨组件共享数据时使用，本质是封装了context
 
+```typescript jsx
+import {createStore} from "thooks";
+import {useState} from "react";
+
+const ThemeContext = createStore(() => {
+  const [theme, setTheme] = useState('white')
+  
+  return {
+    theme,
+    setDarkTheme(){
+      setTheme('dark')
+    }
+  }
+});
+
+const Child = ()=>{
+  const themeContext = ThemeContext.useContext();
+  
+  return <div>theme:{themeContext.theme}</div>
+}
+
+const Middle = ()=>{
+  const themeContext = ThemeContext.useContext();  
+    
+  return <div>
+    <Child></Child>
+    <div onClick={()=>{
+      themeContext.setDarkTheme();
+    }
+    }>设置为深色主题</div>
+  </div>
+}
+
+const App = ()=>{
+  return <ThemeContext.Provider>
+    <Middle />
+  </ThemeContext.Provider>
+}
+
+```
 
 ## API
 
@@ -32,6 +253,7 @@ type useList = <I extends Record<string, any> = any>(options: {
     }>;
 }) => Readonly<{
     loading: boolean;
+    //当前页数据有没有完成
     isFinish: boolean;
     items: I[];
     pagination: {
@@ -44,6 +266,7 @@ type useList = <I extends Record<string, any> = any>(options: {
     getListData: () => Promise<void>;
     setCurrentPage: (currentPage: number) => Promise<void>;
     setPageSize: (pageSize: number) => Promise<void>;
+    //修改列表数据
     setItems: (callback: (item: I, index: number, array: I[]) => I) => void;
 }>
 ```
