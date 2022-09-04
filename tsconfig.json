@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "es5",
+    "noImplicitThis": true,
+    "lib": ["ESNext"],
+    "rootDir": "src",
+    "strictNullChecks": true,
+    "resolveJsonModule": true,
+    "jsx": "react"
+  },
+  "filesGlob": [
+    "./src/**/*.ts"
+  ]
+}
