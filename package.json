@@ -1,8 +1,8 @@
 {
-  "name": "thooks",
+  "name": "dbooks",
   "version": "1.0.0",
   "description": "react数据管理hooks",
-  "repository": "github:yujingwyh/thooks",
+  "repository": "github:yujingwyh/dbooks",
   "scripts": {
     "build": "microbundle --jsx React.createElement"
   },
