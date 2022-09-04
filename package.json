@@ -1,8 +1,8 @@
 {
-  "name": "dbooks",
+  "name": "elite-hooks",
   "version": "1.0.0",
   "description": "react数据管理hooks",
-  "repository": "github:yujingwyh/dbooks",
+  "repository": "github:yujingwyh/elite-hooks",
   "scripts": {
     "build": "microbundle --jsx React.createElement"
   },

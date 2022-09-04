@@ -1,4 +1,4 @@
-# dbooks
+# elite-hooks
 react数据管理hooks
 
 > 在我们写的web页面，基本由列表、详情、表单、弹窗组成，尤其是管理后台上最为贴切。
@@ -12,7 +12,7 @@ react数据管理hooks
 涉及到列表时可以使用`useList`，我们来看个示例
 
 ```typescript jsx
-import {useList} from "dbooks";
+import {useList} from "elite-hooks";
 import {useEffect} from "react";
 
 const ArticlesList = () => {
@@ -44,7 +44,7 @@ const ArticlesList = () => {
 * 默认当第二页及以上时会清空之前的数据，如果是移动端下拉追加数据的场景，可以调用`setConfig({listDataAppend:true})`进行设置
 
 ```typescript jsx
-import {useList} from "dbooks";
+import {useList} from "elite-hooks";
 import {useEffect} from "react";
 
 const ArticlesList = () => {
@@ -78,7 +78,7 @@ const ArticlesList = () => {
 涉及到详情时可以使用`useDetail`
 
 ```typescript jsx
-import {useDetail} from "dbooks";
+import {useDetail} from "elite-hooks";
 import {useEffect} from "react";
 
 const ArticleDetail = () => {
@@ -106,7 +106,7 @@ const ArticleDetail = () => {
 涉及到表单时可以使用`useForm`
 
 ```typescript jsx
-import {useDetail} from "dbooks";
+import {useDetail} from "elite-hooks";
 import {useEffect} from "react";
 
 const ArticleForm = () => {
@@ -140,7 +140,7 @@ const ArticleForm = () => {
 
 如果是有筛选和列表组合的场景，只需要监听`form.fields`改变时调用`list.setCurrentPage(1)`重新请求数据，注意在请求参数里要加上`form.query`
 ```typescript jsx
-import {useList} from "dbooks";
+import {useList} from "elite-hooks";
 import {useEffect} from "react";
 
 const ArticlesList = () => {
@@ -174,7 +174,7 @@ const ArticlesList = () => {
 * 很多时候是在父组件里调用展示弹窗，这时子组件可以使用`useImperativeHandle`把对应展示弹窗的方法透出去
 
 ```typescript jsx
-import {useList} from "dbooks";
+import {useList} from "elite-hooks";
 import {useEffect} from "react";
 
 const ArticleModal = () => {
@@ -200,7 +200,7 @@ const ArticleModal = () => {
 在跨组件共享数据时使用，本质封装了context
 
 ```typescript jsx
-import {createStore} from "dbooks";
+import {createStore} from "elite-hooks";
 import {useState} from "react";
 
 const ThemeContext = createStore(() => {
