@@ -31,6 +31,7 @@ export const useList = <I extends Record<string, any> = any>(options: {
     items: I[];
     totalItems?: number;
   }>;
+  pageSize?:number
 }) => {
   const forceUpdate = useForceUpdate();
   const optionsRef = useRef(options)
@@ -43,7 +44,7 @@ export const useList = <I extends Record<string, any> = any>(options: {
       items: [] as I[],
       pagination: {
         currentPage: 1,
-        pageSize: 10,
+        pageSize: optionsRef.current.pageSize || 10,
         totalItems: 0,
         totalPage: 0,
       },
