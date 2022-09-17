@@ -6,7 +6,7 @@ export const createStore = <D extends Record<string, any> = any, >(
 ) => {
   const Context = React.createContext<D>({} as D);
 
-  const Provider = (props: { children: React.ReactElement }) => {
+  const Provider = (props: { children: React.ReactNode }) => {
     const update = useForceUpdate();
     const data = getDataCallback(update);
 
