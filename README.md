@@ -181,7 +181,7 @@ const ArticleForm = ()=>{
       title:""
     },
     onSetFields(){
-      form.setFieldsValue(filter.fields)
+      form.setFieldsValue(aForm.fields)
     },
     async onSubmit() {
       //...
@@ -201,9 +201,15 @@ const ArticleForm = ()=>{
       onFinish={()=>{
         aForm.submit();
       }}
-      onValuesChange={(values) => {
-        filter.setFields(values)
+      onValuesChange={(changedValues) => {
+        aForm.setFields(changedValues)
       }}>
+        <Form.Item
+          label="标题"
+          name="title"
+        >
+          <Input />
+        </Form.Item>
     </Form>
   )
 }
