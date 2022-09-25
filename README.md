@@ -105,8 +105,9 @@ const ArticleDetail = () => {
 ### useForm
 涉及到表单时可以使用`useForm`
 
+* `form.sediments`是调用submit后`form.fields`的数据拷贝
 ```typescript jsx
-import {useDetail} from "hatom";
+import {useForm} from "hatom";
 import {useEffect} from "react";
 
 const ArticleForm = () => {
@@ -115,11 +116,11 @@ const ArticleForm = () => {
       title:""
     },
     onSubmit(){
-      if(!form.fields.title){
+      if(!form.sediments.title){
         return alert('请输入标题')
       }  
       return request.post('/api/article',{
-        ...form.fields
+        ...form.sediments
       })
     }
   });
@@ -138,9 +139,9 @@ const ArticleForm = () => {
 }
 ```
 
-如果是有筛选和列表组合的场景，只需要监听`form.fields`改变时调用`list.setCurrentPage(1)`重新请求数据，注意在请求参数里要加上`form.query`
+如果是有筛选和列表组合的场景，只需要监听`form.sediments`改变时调用`list.setCurrentPage(1)`重新请求数据，注意在请求参数里要加上`form.sediments`
 ```typescript jsx
-import {useList} from "hatom";
+import {useForm} from "hatom";
 import {useEffect} from "react";
 
 const ArticlesList = () => {
@@ -153,7 +154,7 @@ const ArticlesList = () => {
     onGetListData(query) {
       return request.get('/api/articles',{
         ...query,
-        ...form.query
+        ...form.sediments
       })
     }
   });
@@ -161,9 +162,50 @@ const ArticlesList = () => {
   
   useEffect(()=>{
     list.setCurrentPage(1)
-  },[form.fields]);
+  },[form.sediments]);
   
   //return ...
+}
+```
+
+与antd组件结合
+
+```typescript jsx
+import {useForm} from "hatom";
+import {Form} from 'antd';
+
+const ArticleForm = ()=>{
+  const [form] = Form.useForm();
+  const aForm = useForm({
+    fields: {
+      title:""
+    },
+    onSetFields(){
+      form.setFieldsValue(filter.fields)
+    },
+    async onSubmit() {
+      //...
+      console.log(aForm.sediments)
+    },
+  }); 
+
+  useEffect(() => {
+    aForm.setFields({
+      title:'111'
+    });
+  }, []);
+
+  return (
+    <Form
+      form={form}
+      onFinish={()=>{
+        aForm.submit();
+      }}
+      onValuesChange={(values) => {
+        filter.setFields(values)
+      }}>
+    </Form>
+  )
 }
 ```
 
@@ -240,6 +282,29 @@ const App = ()=>{
 
 ```
 
+内部使用了useMemo，设置引用类型状态时必须改变变量地址，不然组件可能不会渲染或者获取数据不是最新值
+
+```typescript jsx
+import {createStore} from "hatom";
+import {useState} from "react";
+
+const ListContext = createStore(() => {
+  const [list, setList] = useState([1])
+  
+  return {
+    list,
+    login(){
+      list[1] = 3;
+      //这样设置后组件可能不渲染
+      setList(list)
+      //推荐这样写
+      setList([...list])
+    }
+  }
+});
+```
+例如`setUser({...user})`
+
 ## API
 
 ### useList
@@ -300,7 +365,7 @@ type useForm = <F extends Record<string, any> = any>(options: {
 }) => Readonly<{
     loading: boolean;
     fields: F;
-    query: F;
+    sediments: F;
 } & {
     setFields: (fields: Partial<F>) => void;
     submit: () => Promise<void>;

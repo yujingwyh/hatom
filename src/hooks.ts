@@ -133,7 +133,7 @@ export const useForm = <F extends Record<string, any> = any>(options: {
   onSetFields?: (fields: Partial<F>) => void;
 }) => {
   const forceUpdate = useForceUpdate();
-  const copyFields = <D>(fields: D): D => JSON.parse(JSON.stringify(fields));
+  const copyFields = <D>(fields: D): D => ({...fields});
   const optionsRef = useRef(options)
 
   optionsRef.current = options;
@@ -141,7 +141,7 @@ export const useForm = <F extends Record<string, any> = any>(options: {
     const data = {
       loading: false,
       fields: copyFields(optionsRef.current.fields),
-      query: copyFields(optionsRef.current.fields),
+      sediments: copyFields(optionsRef.current.fields),
     };
 
     const setFields = (fields: Partial<F>) => {
@@ -161,7 +161,7 @@ export const useForm = <F extends Record<string, any> = any>(options: {
 
       try {
         optionsRef.current.onSubmit && (await optionsRef.current.onSubmit());
-        data.query = copyFields(data.fields);
+        data.sediments = copyFields(data.fields);
         data.loading = false;
         forceUpdate();
       } catch (err) {
