@@ -1,15 +1,20 @@
 # hatom
+
 react数据管理hooks
 
-> 在我们写的web页面，基本由列表、详情、表单、弹窗组成，尤其是管理后台上最为贴切。
-> 
-> 将这几种场景进行数据抽离，封装成公共库可以大大提升开发效率。
+> 在我们写的web页面，基本由列表、详情、表单、弹窗组成，尤其是管理后台上最为符合
+>
+> 将这几种场景进行数据抽离，封装成公共库可以大大提升开发效率
 
 ## 使用
+
 实际的业务场景由以下几个组合支撑
 
+* 当要求数据格式不符合时可在request层统一做处理
+
 ### 列表
-涉及到列表时可以使用`useList`，我们来看个示例
+
+涉及到多个项时可以使用`useList`，例如列表页。我们来看个示例
 
 ```typescript jsx
 import {useList} from "hatom";
@@ -17,28 +22,28 @@ import {useEffect} from "react";
 
 const ArticlesList = () => {
   const list = useList({
-    onGetListData():Promise<{
-      items: I[];
-    }> {
+    onGetListData() {
+      //需要返回 Promise<{items:any[]}>  
       return request.get('/api/articles')
     }
   });
 
   useEffect(() => {
     list.getListData();
-  },[])
-  
-  if(list.loading){
-      return <div>loading</div>
+  }, [])
+
+  if (list.loading) {
+    return <div>loading</div>
   }
 
-  return list.items.map(item=>{
+  return list.items.map(item => {
     return <div>{item.title}</div>
   })
 }
 ```
 
-如果是有分页也非常方便，只需调用`setCurrentPage`，会自动在调用`onGetListData`中传入分页参数，另外返回的数据要加上统计信息 <br />
+如果是有分页也非常方便，只需调用`setCurrentPage`，会自动在调用`onGetListData`
+中传入分页参数，另外返回的数据要加上统计信息 <br />
 
 * 如果自己的接口分页数据并不是`currentPage、totalItems`这种格式，建议在`request`层做统一处理，或者再基于`useList`进行封装
 * 默认当第二页及以上时会清空之前的数据，如果是移动端下拉追加数据的场景，可以调用`setConfig({listDataAppend:true})`进行设置
@@ -50,32 +55,31 @@ import {useEffect} from "react";
 const ArticlesList = () => {
   const list = useList({
     //query为分页信息
-    onGetListData(query: {
-      currentPage: number;
-      pageSize: number;
-    }): Promise<{
-      items: I[];
-      totalItems: number;
-    }> {
-      return request.get('/api/articles', query)
+    onGetListData(query) {
+      //需要返回 Promise<{items: any[];totalItems: number;}>  
+      return request.get('/api/articles', {
+        currentPage: query.currentPage,
+        pageSize: query.pageSize
+      })
     }
   });
 
-  useEffect(()=>{
-    const main = async ()=>{
+  useEffect(() => {
+    const main = async () => {
       await list.setCurrentPage(1)
-      
+
       console.log(list.pagination.totalPage)
     }
-    
+
     main()
-  },[])
+  }, [])
   //...
 }
 ```
 
 ### useDetail
-涉及到详情时可以使用`useDetail`
+
+涉及到单个项时可以使用`useDetail`，例如详情页
 
 ```typescript jsx
 import {useDetail} from "hatom";
@@ -98,40 +102,42 @@ const ArticleDetail = () => {
     return <div>loading</div>
   }
 
-  return <div>{detail.item.title || ''}</div>
+  return <div>{detail.item.title}</div>
 }
 ```
 
 ### useForm
+
 涉及到表单时可以使用`useForm`
 
 * `form.sediments`是调用submit后`form.fields`的数据拷贝
+
 ```typescript jsx
 import {useForm} from "hatom";
 import {useEffect} from "react";
 
 const ArticleForm = () => {
   const form = useForm({
-    fields:{
-      title:""
+    fields: {
+      title: ""
     },
-    onSubmit(){
-      if(!form.sediments.title){
+    onSubmit() {
+      if (!form.sediments.title) {
         return alert('请输入标题')
-      }  
-      return request.post('/api/article',{
+      }
+      return request.post('/api/article', {
         ...form.sediments
       })
     }
   });
 
   return <div>
-    <Input value={form.fields.title} onChange={e=>{
+    <Input value={form.fields.title} onChange={e => {
       form.setFields({
-        title:e.title.submit()
+        title: e.target.value
       })
     }}></Input>
-    <Button loading={form.loading} onClick={()=>{
+    <Button loading={form.loading} onClick={() => {
       form.submit();
     }
     }>提交</Button>
@@ -139,7 +145,9 @@ const ArticleForm = () => {
 }
 ```
 
-如果是有筛选和列表组合的场景，只需要监听`form.sediments`改变时调用`list.setCurrentPage(1)`重新请求数据，注意在请求参数里要加上`form.sediments`
+如果是有筛选和列表组合的场景，只需要监听`form.sediments`改变时调用`list.setCurrentPage(1)`
+重新请求数据，注意在请求参数里要加上筛选条件`form.sediments`
+
 ```typescript jsx
 import {useForm} from "hatom";
 import {useEffect} from "react";
@@ -152,18 +160,18 @@ const ArticlesList = () => {
   });
   const list = useList({
     onGetListData(query) {
-      return request.get('/api/articles',{
+      return request.get('/api/articles', {
         ...query,
         ...form.sediments
       })
     }
   });
-  
-  
-  useEffect(()=>{
+
+
+  useEffect(() => {
     list.setCurrentPage(1)
-  },[form.sediments]);
-  
+  }, [form.sediments]);
+
   //return ...
 }
 ```
@@ -174,48 +182,50 @@ const ArticlesList = () => {
 import {useForm} from "hatom";
 import {Form} from 'antd';
 
-const ArticleForm = ()=>{
-  const [form] = Form.useForm();
-  const aForm = useForm({
+const ArticleForm = () => {
+  const [antdform] = Form.useForm();
+  const form = useForm({
     fields: {
-      title:""
+      title: ""
     },
-    onSetFields(){
-      form.setFieldsValue(aForm.fields)
+    onSetFields() {
+      antdform.setFieldsValue(form.fields)
     },
     async onSubmit() {
       //...
-      console.log(aForm.sediments)
+      console.log(form.sediments)
     },
-  }); 
+  });
 
   useEffect(() => {
-    aForm.setFields({
-      title:'111'
+    //初始值  
+    form.setFields({
+      title: '111'
     });
   }, []);
 
   return (
     <Form
-      form={form}
-      onFinish={()=>{
-        aForm.submit();
+      form={antdform}
+      onFinish={() => {
+        form.submit();
       }}
       onValuesChange={(changedValues) => {
-        aForm.setFields(changedValues)
+        form.setFields(changedValues)
       }}>
-        <Form.Item
-          label="标题"
-          name="title"
-        >
-          <Input />
-        </Form.Item>
+      <Form.Item
+        label="标题"
+        name="title"
+      >
+        <Input/>
+      </Form.Item>
     </Form>
   )
 }
 ```
 
 ### useModal
+
 涉及到弹窗时可以使用`useModal`
 
 * 显示弹窗时传的数据都可以放到第一个参数里，然后在`modal.payload`中拿到
@@ -227,14 +237,15 @@ import {useEffect} from "react";
 
 const ArticleModal = () => {
   const modal = useModal()
-    
+
   return <div>
-    <div onClick={()=>{
+    <div onClick={() => {
       modal.showModal({
-        title:"标题"
+        title: "标题"
       })
     }
-    }>显示</div>
+    }>显示
+    </div>
     <Modal
       title={modal.payload.title || ''}
       visible={modal.visible}
@@ -245,6 +256,7 @@ const ArticleModal = () => {
 ```
 
 ### createStore
+
 在跨组件共享数据时使用，本质封装了context
 
 ```typescript jsx
@@ -253,36 +265,37 @@ import {useState} from "react";
 
 const ThemeContext = createStore(() => {
   const [theme, setTheme] = useState('white')
-  
+
   return {
     theme,
-    setDarkTheme(){
+    setDarkTheme() {
       setTheme('dark')
     }
   }
 });
 
-const Child = ()=>{
+const Child = () => {
   const themeContext = ThemeContext.useContext();
-  
+
   return <div>当前主题:{themeContext.theme}</div>
 }
 
-const Middle = ()=>{
-  const themeContext = ThemeContext.useContext();  
-    
+const Middle = () => {
+  const themeContext = ThemeContext.useContext();
+
   return <div>
     <Child></Child>
-    <div onClick={()=>{
+    <div onClick={() => {
       themeContext.setDarkTheme();
     }
-    }>设置为深色主题</div>
+    }>设置为深色主题
+    </div>
   </div>
 }
 
-const App = ()=>{
+const App = () => {
   return <ThemeContext.Provider>
-    <Middle />
+    <Middle/>
   </ThemeContext.Provider>
 }
 
@@ -296,111 +309,117 @@ import {useState} from "react";
 
 const ListContext = createStore(() => {
   const [list, setList] = useState([1])
-  
+
   return {
     list,
-    login(){
+    login() {
       list[1] = 3;
       //这样设置后组件可能不渲染
       setList(list)
-      //推荐这样写
+      //这样写才有效
       setList([...list])
     }
   }
 });
 ```
-例如`setUser({...user})`
 
 ## API
 
 ### useList
 
 创建列表数据管理器
+
 ```typescript
 type useList = <I extends Record<string, any> = any>(options: {
-    onGetListData: (query: {
-        currentPage: number;
-        pageSize: number;
-    }) => Promise<{
-        items: I[];
-        totalItems?: number;
-    }>;
-    pageSize?: number
-}) => Readonly<{
-    loading: boolean;
-    //当前页数据有没有完成
-    isFinish: boolean;
+  onGetListData: (query: {
+    currentPage: number;
+    pageSize: number;
+  }) => Promise<{
     items: I[];
-    pagination: {
-        currentPage: number;
-        pageSize: number;
-        totalItems: number;
-        totalPage: number;
-    };
+    totalItems?: number;
+  }>;
+  pageSize?: number
+}) => Readonly<{
+  loading: boolean;
+  //当前页数据有没有完成
+  isFinish: boolean;
+  items: I[];
+  pagination: {
+    currentPage: number;
+    pageSize: number;
+    totalItems: number;
+    totalPage: number;
+  };
 } & {
-    getListData: () => Promise<void>;
-    setCurrentPage: (currentPage: number) => Promise<void>;
-    setPageSize: (pageSize: number) => Promise<void>;
-    //修改列表数据
-    setItems: (callback: (item: I, index: number, array: I[]) => I) => void;
+  getListData: () => Promise<void>;
+  setCurrentPage: (currentPage: number) => Promise<void>;
+  setPageSize: (pageSize: number) => Promise<void>;
+  //修改列表数据
+  setItems: (callback: (item: I, index: number, array: I[]) => I) => void;
 }>
 ```
 
 ### useDetail
+
 创建详情数据管理器
 
 ```typescript
 type useDetail = <I extends Record<string, any> = any>(options: {
-    onGetDetailData: () => Promise<I>;
+  onGetDetailData: () => Promise<I>;
 }) => Readonly<{
-    loading: boolean;
-    item: I;
+  loading: boolean;
+  item: I;
 } & {
-    getDetailData: () => Promise<void>;
+  getDetailData: () => Promise<void>;
 }>
 ```
 
 ### useForm
+
 创建表单数据管理器
+
 ```typescript
 type useForm = <F extends Record<string, any> = any>(options: {
-    fields: F;
-    onSubmit?: (() => void | Promise<void>);
-    onReset?: (() => void);
-    onSetFields?: ((fields: Partial<F>) => void);
+  fields: F;
+  onSubmit?: (() => void | Promise<void>);
+  onReset?: (() => void);
+  onSetFields?: ((fields: Partial<F>) => void);
 }) => Readonly<{
-    loading: boolean;
-    fields: F;
-    sediments: F;
+  loading: boolean;
+  fields: F;
+  sediments: F;
 } & {
-    setFields: (fields: Partial<F>) => void;
-    submit: () => Promise<void>;
-    reset: () => Promise<void>;
+  setFields: (fields: Partial<F>) => void;
+  submit: () => Promise<void>;
+  reset: () => Promise<void>;
 }>
 ```
+
 ### useModal
+
 创建弹窗数据管理器
 
 ```typescript
 type useModal = <P extends Record<string, any> = any>() => Readonly<{
-    visible: boolean;
-    payload: P;
+  visible: boolean;
+  payload: P;
 } & {
-    showModal: (payload?: P) => void;
-    hideModal: () => void;
+  showModal: (payload?: P) => void;
+  hideModal: () => void;
 }>
 ```
 
 ### createStore
+
 创建一个数据管理器
 
 ```typescript
 type createStore = <D extends Record<string, any> = any>(getDataCallback: (update: () => void) => D) => {
-    _Context: React.Context<D>;
-    Provider: (props: {
-        children: React.ReactElement;
-    }) => JSX.Element;
-    useContext: () => D;
+  _Context: React.Context<D>;
+  Provider: (props: {
+    children: React.ReactElement;
+  }) => JSX.Element;
+  useContext: () => D;
 }
 ```
 
@@ -410,6 +429,6 @@ type createStore = <D extends Record<string, any> = any>(getDataCallback: (updat
 
 ```typescript
 type setConfig = (config: Partial<{
-    listDataAppend: boolean;
+  listDataAppend: boolean;
 }>) => void;
 ```
