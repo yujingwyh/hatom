@@ -192,7 +192,7 @@ const ArticleForm = () => {
       antdform.setFieldsValue(form.fields)
     },
     async onSubmit() {
-      //...
+      //... 这里可以发送数据给后端
       console.log(form.sediments)
     },
   });
