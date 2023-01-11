@@ -110,7 +110,7 @@ const ArticleDetail = () => {
 
 涉及到表单时可以使用`useForm`
 
-* `form.sediments`是调用submit后`form.fields`的数据拷贝
+* `form.fields`是表单中当前的值，`form.sediments`是调用submit后`form.fields`的数据拷贝，例如筛选表单只有点击筛选按钮才传给后端
 
 ```typescript jsx
 import {useForm} from "hatom";
