@@ -229,10 +229,9 @@ const ArticleForm = () => {
 涉及到弹窗时可以使用`useModal`
 
 * 显示弹窗时传的数据都可以放到第一个参数里，然后在`modal.payload`中拿到
-* 很多时候是在父组件里调用展示弹窗，这时子组件可以使用`useImperativeHandle`把对应展示弹窗的方法透出去
 
 ```typescript jsx
-import {useList} from "hatom";
+import {useModal} from "hatom";
 import {useEffect} from "react";
 
 const ArticleModal = () => {
@@ -252,6 +251,44 @@ const ArticleModal = () => {
       onClose={modal.hideModal}
     ></Modal>
   </div>
+}
+```
+
+很多时候是在父组件里调用展示弹窗，这时子组件可以使用`useImperativeHandle`把对应展示弹窗的方法透出去
+
+```typescript jsx
+import {useModal} from "hatom";
+import React, {useImperativeHandle, useRef} from "react";
+
+const ArticleModal = React.forwardRef((_props, ref) => {
+  const modal = useModal()
+
+  useImperativeHandle(ref, () => {
+    return modal;
+  })
+
+  return <Modal
+    title={modal.payload.title || ''}
+    visible={modal.visible}
+    onClose={modal.hideModal}
+  ></Modal>
+})
+
+const ArticlesList = () => {
+  const modelRef = useRef<ReturnType<typeof useModal>>()
+
+  return <React>
+    <div onClick={() => {
+      if (modelRef.current) {
+        modelRef.current.showModal({
+          title: "标题"
+        })
+      }
+    }
+    }>显示
+    </div>
+    <ArticleModal ref={modelRef}></ArticleModal>
+  </React>
 }
 ```
 
