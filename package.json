@@ -1,6 +1,6 @@
 {
   "name": "hatom",
-  "version": "2.0.4",
+  "version": "3.0.0",
   "description": "react数据管理hooks",
   "repository": "github:yujingwyh/hatom",
   "scripts": {
@@ -24,5 +24,8 @@
   },
   "peerDependencies": {
     "react": ">=16.9.0"
+  },
+  "dependencies": {
+    "p-queue": "^7.3.4"
   }
 }

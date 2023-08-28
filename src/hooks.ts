@@ -1,5 +1,5 @@
-import {useEffect, useMemo, useReducer, useRef} from "react";
-import {configs} from "./utils";
+import {useCallback, useEffect, useMemo, useReducer, useRef} from "react";
+import {configs, createQueue} from "./utils";
 
 const returnReadonly = <T extends {}, U>(
   data: T,
@@ -31,10 +31,11 @@ export const useList = <I extends Record<string, any> = any>(options: {
     items: I[];
     totalItems?: number;
   }>;
-  pageSize?:number
+  pageSize?: number
 }) => {
   const forceUpdate = useForceUpdate();
   const optionsRef = useRef(options)
+  const queue = useCallback(createQueue(), [])
 
   optionsRef.current = options;
   return useMemo(() => {
@@ -51,8 +52,7 @@ export const useList = <I extends Record<string, any> = any>(options: {
     };
 
     const getListData = async () => {
-      if (data.loading)
-        return Promise.reject("getListData:Cannot be called while loading");
+      const onGetListData = queue(optionsRef.current.onGetListData as any)
 
       data.isFinish = false;
       data.loading = true;
@@ -61,7 +61,7 @@ export const useList = <I extends Record<string, any> = any>(options: {
       try {
         const isFirstPage = data.pagination.currentPage === 1;
 
-        const res = await optionsRef.current.onGetListData({
+        const res = await (onGetListData as any)({
           currentPage: data.pagination.currentPage,
           pageSize: data.pagination.pageSize,
         });
@@ -191,7 +191,8 @@ export const useDetail = <I extends Record<string, any> = any>(options: {
   onGetDetailData: () => Promise<I>;
 }) => {
   const forceUpdate = useForceUpdate();
-  const optionsRef = useRef(options)
+  const optionsRef = useRef(options);
+  const queue = useCallback(createQueue(), []);
 
   optionsRef.current = options;
   return useMemo(() => {
@@ -201,14 +202,13 @@ export const useDetail = <I extends Record<string, any> = any>(options: {
     };
 
     const getDetailData = async () => {
-      if (data.loading)
-        return Promise.reject("getDetailData:Cannot be called while loading");
+      const onGetDetailData = queue(optionsRef.current.onGetDetailData as any)
 
       data.loading = true;
       forceUpdate();
 
       try {
-        data.item = await optionsRef.current.onGetDetailData();
+        data.item = await (onGetDetailData as any)();
         data.loading = false;
         forceUpdate();
       } catch (err) {
