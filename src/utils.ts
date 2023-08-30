@@ -9,7 +9,7 @@ export const setConfig = (config: Partial<typeof configs>) => {
 export const createQueue = () => {
   let index = {current: 0}
 
-  return async <T extends Promise<any>>(task: T) => {
+  return <T extends Promise<any>>(task: T) => {
     return (...args: any[]) => {
       const newIndex = index.current = index.current + 1;
 
